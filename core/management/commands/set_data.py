@@ -14,7 +14,7 @@ pip install psutil
 pip install meliae
 pip install guppy3
 """
-
+from core.models import ProductPicture, Product, Vendor
 
 class Command(BaseCommand):
     help = "this is a necessary command if its the first time you run project" \
@@ -24,10 +24,20 @@ class Command(BaseCommand):
 
         start = time.perf_counter()
 
+        vendor, created = Vendor.objects.get_or_create(name='okala')
+
         data_address = str(BASE_DIR) + '/data/okala-images.json'
         with open(data_address, 'r', encoding='utf-8') as json_file:
             my_data = json.load(json_file)
-            # print(my_data)
+            for index, link in enumerate(my_data):
+                pp = ProductPicture.objects.create(
+                    picture_src=link
+                )
+                Product.objects.create(
+                    pictures=pp,
+                    vendor=vendor
+                )
+                print(f'{index} obj created')
 
         finish = time.perf_counter()
 
