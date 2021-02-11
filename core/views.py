@@ -1,6 +1,7 @@
 from django.urls import path, include
 from core.models import ProductPicture, Product, Vendor
 from rest_framework import routers, serializers, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 # Serializers define the API representation.
@@ -30,8 +31,10 @@ class ProductSerializer(serializers.HyperlinkedModelSerializer):
 
 # ViewSets define the view behavior.
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('-updated_at')
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['pictures__state']
 
 
 class VendorViewSet(viewsets.ModelViewSet):
