@@ -11,6 +11,9 @@ pip install psutil
 pip install meliae
 pip install guppy3
 """
+HOST = 'http://localhost'
+PORT = 6800
+SECRET = ''
 
 
 class Command(BaseCommand):
@@ -22,40 +25,29 @@ class Command(BaseCommand):
         start = time.perf_counter()
 
         # Product.objects.filter(pictures__state='need_resize')
+        aria = aria2p.API(
+            aria2p.Client(
+                host=HOST,
+                port=PORT,
+                secret=SECRET,
+            )
+        )
 
         pps = ProductPicture.objects.filter(state='need_resize')
         print(f'you have {pps.count()} not downloaded image')
         for index, pic in enumerate(pps):
-            # Stream the image from the url
-            response = requests.get(pic.picture_src, stream=True)
 
-            # Was the request OK?
-            if response.status_code != requests.codes.ok:
-                # Nope, error handling, skip file etc etc etc
-                continue
+            # aria api connect
 
-            # Get the filename from the url, used for saving later
-            file_name = pic.picture_src.split('/')[-1]
+            # aria.add(pic.picture_src)
 
-            # Create a temporary file
-            lf = tempfile.NamedTemporaryFile()
 
-            # Read the streamed image in sections
-            for block in response.iter_content(1024 * 8):
+            # list downloads
+            downloads = aria.get_downloads()
 
-                # If no more file then stop
-                if not block:
-                    break
+            for download in downloads:
+                print(download.name, download.download_speed)
 
-                # Write image block to temporary file
-                lf.write(block)
-
-            # # Create the model you want to save the image to
-            # image = Image()
-
-            # Save the temporary image to the model#
-            # This saves the model so be sure that it is valid
-            pic.large.save(file_name, files.File(lf))
 
             print(f'{index} image downloaded url => {pic.picture_src}')
 
