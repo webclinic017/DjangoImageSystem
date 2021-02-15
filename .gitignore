@@ -144,3 +144,4 @@ cython_debug/
 .idea/*
 local.py
 keys.py
+media/
