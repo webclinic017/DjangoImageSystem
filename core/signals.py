@@ -51,10 +51,10 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 #         print('OK')
 #     else:
 #         print('not OK')
-#         # instance.small = pic_small_gen(instance)
-#         # instance.medium = pic_medium_gen(instance)
+        # instance.small = pic_small_gen(instance)
+        # instance.medium = pic_medium_gen(instance)
 
-#
+
 # @receiver(post_save, sender=ProductPicture)
 # def pic_change(sender, instance, *args, **kwargs):
 #     if instance.state == 'downloaded':

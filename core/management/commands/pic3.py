@@ -6,6 +6,8 @@ import tempfile
 from django.core import files
 import concurrent.futures
 from django.core.files.base import ContentFile
+from PIL import Image
+from io import StringIO
 """
 python manage.py system_warmup -----> call all command
 pip install psutil
@@ -21,8 +23,11 @@ class Command(BaseCommand):
     @staticmethod
     def process_img(obj):
 
-        new_image = ContentFile(obj.large.read())
+        new_image = Image.open(StringIO(obj.large.read()))
+        convert_image = new_image.convert('RGB')
         file_name = str(obj.large.name).split('/')[-1]
+        convert_image.save(file_name, 'webp')
+
         new_image.name = file_name + '_s'
         obj.small = new_image
         obj.save()
@@ -85,3 +90,21 @@ class Command(BaseCommand):
 
 
 # Multi thread python ,request downloaded ,Finished in 2.27 seconds
+
+from PIL import Image as Img
+# import StringIO
+
+# class Images(models.Model):
+#     image = models.ImageField()
+#
+#     def save(self, *args, **kwargs):
+#         if self.image:
+#             img = Img.open(StringIO.StringIO(self.image.read()))
+#             if img.mode != 'RGB':
+#                 img = img.convert('RGB')
+#             img.thumbnail((self.image.width/1.5,self.image.height/1.5), Img.ANTIALIAS)
+#             output = StringIO.StringIO()
+#             img.save(output, format='JPEG', quality=70)
+#             output.seek(0)
+#             self.image= InMemoryUploadedFile(output,'ImageField', "%s.jpg" %self.image.name.split('.')[0], 'image/jpeg', output.len, None)
+#         super(Images, self).save(*args, **kwargs)
