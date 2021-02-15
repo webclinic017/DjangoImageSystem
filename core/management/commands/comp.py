@@ -5,7 +5,8 @@ import requests
 import tempfile
 from django.core import files
 import concurrent.futures
-
+from PIL import Image
+import os
 """
 python manage.py system_warmup -----> call all command
 pip install psutil
@@ -20,39 +21,47 @@ class Command(BaseCommand):
 
     @staticmethod
     def download(obj):
-        # Stream the image from the url
         response = requests.get(obj.picture_src, stream=True)
 
-        # Was the request OK?
+
         if response.status_code != requests.codes.ok:
-            # Nope, error handling, skip file etc etc etc
             pass
 
-        # Get the filename from the url, used for saving later
         file_name = obj.picture_src.split('/')[-1]
+        # file_name = '{}.{}'.format(file_name, 'webp')
 
-        # Create a temporary file
         lf = tempfile.NamedTemporaryFile()
+        # lf = tempfile.NamedTemporaryFile(suffix='.webp')
 
-        # Read the streamed image in sections
         for block in response.iter_content(1024 * 8):
 
-            # If no more file then stop
             if not block:
                 break
 
-            # Write image block to temporary file
             lf.write(block)
 
-        # # Create the model you want to save the image to
-        # image = Image()
+        # before_ = str(os.path.getsize(lf.name))
 
-        # Save the temporary image to the model#
-        # This saves the model so be sure that it is valid
-        obj.state = 'downloaded'
+        im = Image.open(lf.name).convert('RGB')
+
+        im.save(lf.name, 'webp')
+
+        small_size = (156, 156)
+        medium_size = (182, 182)
+
+
+
+        im.close()
+        # after_ = str(os.path.getsize(lf.name))
+
         obj.large.save(file_name, files.File(lf))
-        # obj.save()
+        large_image = Image.open(obj.large)
+        small_pic = large_image.resize(small_size)
+        medium_pic = large_image.resize(medium_size)
+        obj.medium.save(file_name+'_medium', files.File(medium_pic))
+        obj.small.save(file_name+'_small', files.File(small_pic))
 
+        # print(f'{before_} change to {after_}')
         print(f' image downloaded url => {obj.picture_src}')
 
     def initial_setup(self):
