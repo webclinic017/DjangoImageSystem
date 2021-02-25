@@ -5,11 +5,9 @@ import requests
 import tempfile
 from django.core import files
 import concurrent.futures
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.base import ContentFile
 from PIL import Image
-from io import StringIO, BytesIO
-
+from io import StringIO
 """
 python manage.py system_warmup -----> call all command
 pip install psutil
@@ -23,22 +21,22 @@ class Command(BaseCommand):
            "this will setup picture and slug and etc"
 
     @staticmethod
-    def make_thumbnail(image, size=(100, 100)):
-        """Makes thumbnails of given size from given image"""
+    def process_img(obj):
 
-        im = Image.open(image)
+        new_image = Image.open(StringIO(obj.large.read()))
+        convert_image = new_image.convert('RGB')
+        file_name = str(obj.large.name).split('/')[-1]
+        convert_image.save(file_name, 'webp')
 
-        im.convert('RGB')  # convert mode
-
-        im.thumbnail(size)  # resize image
-
-        thumb_io = BytesIO()  # create a BytesIO object
-
-        im.save(thumb_io, 'webp', quality=85)  # save image to BytesIO object
-
-        thumbnail = files.File(thumb_io, name=image.name)  # create a django friendly File object
-
-        return thumbnail
+        new_image.name = file_name + '_s'
+        obj.small = new_image
+        obj.save()
+        print('small is saved')
+        new_image.name = file_name + '_m'
+        obj.medium = new_image
+        obj.state = 'published'
+        obj.save()
+        print('med is saved')
 
 
     def download(self, obj):
@@ -59,23 +57,13 @@ class Command(BaseCommand):
 
             lf.write(block)
 
-        image_obj_small = files.File(lf)
-        image_obj_large = files.File(lf)
-        image_obj_medium = files.File(lf)
-        image_obj_small.name = file_name + '_s'
-        image_obj_large.name = file_name + '_l'
-        image_obj_medium.name = file_name + '_m'
+        obj.state = 'downloaded'
+        obj.large.save(file_name, files.File(lf))
 
-        small_img = self.make_thumbnail(image_obj_small, size=(100, 100))
-        thumbnail = self.make_thumbnail(image_obj_medium, size=(128, 128))
-        large_img = self.make_thumbnail(image_obj_large, size=(216, 216))
-
-        obj.large = large_img
-        obj.small = small_img
-        obj.medium = thumbnail
-        obj.save()
+        # self.process_img(obj)
 
         print(f' image downloaded url => {obj.picture_src}')
+
 
 
     def initial_setup(self):
@@ -84,7 +72,7 @@ class Command(BaseCommand):
 
         # Product.objects.filter(pictures__state='need_resize')
 
-        pps = list(ProductPicture.objects.filter(state='need_resize')[:7])
+        pps = list(ProductPicture.objects.filter(state='need_resize')[:50])
         # pps = list(ProductPicture.objects.filter(state='need_resize').values_list('picture_src', flat=True)[:50])
         print(f'you have {len(pps)} not downloaded image')
 
@@ -100,3 +88,23 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.initial_setup()
 
+
+# Multi thread python ,request downloaded ,Finished in 2.27 seconds
+
+from PIL import Image as Img
+# import StringIO
+
+# class Images(models.Model):
+#     image = models.ImageField()
+#
+#     def save(self, *args, **kwargs):
+#         if self.image:
+#             img = Img.open(StringIO.StringIO(self.image.read()))
+#             if img.mode != 'RGB':
+#                 img = img.convert('RGB')
+#             img.thumbnail((self.image.width/1.5,self.image.height/1.5), Img.ANTIALIAS)
+#             output = StringIO.StringIO()
+#             img.save(output, format='JPEG', quality=70)
+#             output.seek(0)
+#             self.image= InMemoryUploadedFile(output,'ImageField', "%s.jpg" %self.image.name.split('.')[0], 'image/jpeg', output.len, None)
+#         super(Images, self).save(*args, **kwargs)
