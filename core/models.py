@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from core.utils import get_large_image_path, get_medium_image_path, get_small_image_path
 
 
 class ModifyDate(models.Model):
@@ -13,9 +14,9 @@ class ModifyDate(models.Model):
 class ProductPicture(models.Model):
     picture_src = models.URLField()
     state = models.CharField(default='need_resize', max_length=512)
-    small = models.ImageField(upload_to='products/small/', blank=True, null=True)
-    medium = models.ImageField(upload_to='products/medium/', blank=True, null=True)
-    large = models.ImageField(upload_to='products/large/', blank=True, null=True)
+    small = models.ImageField(upload_to=get_small_image_path, blank=True, null=True)
+    medium = models.ImageField(upload_to=get_medium_image_path, blank=True, null=True)
+    large = models.ImageField(upload_to=get_large_image_path, blank=True, null=True)
 
 
 class Vendor(models.Model):
