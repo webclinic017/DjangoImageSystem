@@ -5,6 +5,7 @@ import requests
 import tempfile
 from django.core import files
 import concurrent.futures
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.base import ContentFile
 from PIL import Image
 from io import StringIO
@@ -19,25 +20,6 @@ pip install guppy3
 class Command(BaseCommand):
     help = "this is a necessary command if its the first time you run project" \
            "this will setup picture and slug and etc"
-
-    @staticmethod
-    def process_img(obj):
-
-        new_image = Image.open(StringIO(obj.large.read()))
-        convert_image = new_image.convert('RGB')
-        file_name = str(obj.large.name).split('/')[-1]
-        convert_image.save(file_name, 'webp')
-
-        new_image.name = file_name + '_s'
-        obj.small = new_image
-        obj.save()
-        print('small is saved')
-        new_image.name = file_name + '_m'
-        obj.medium = new_image
-        obj.state = 'published'
-        obj.save()
-        print('med is saved')
-
 
     def download(self, obj):
         response = requests.get(obj.picture_src, stream=True)
@@ -57,8 +39,24 @@ class Command(BaseCommand):
 
             lf.write(block)
 
-        obj.state = 'downloaded'
-        obj.large.save(file_name, files.File(lf))
+
+        im = Image.open(lf)
+        rgb_im = im.convert('RGB')
+        rgb_im.save(lf, 'webp')
+
+        obj.large.save(
+            file_name,
+            InMemoryUploadedFile(
+                rgb_im,
+                None, '',
+                rgb_im.file.content_type,
+                rgb_im.size,
+                rgb_im.file.charset,
+            ),
+            save=False
+        )
+
+        # obj.large.save(file_name, files.File(lf))
 
         # self.process_img(obj)
 
@@ -72,7 +70,7 @@ class Command(BaseCommand):
 
         # Product.objects.filter(pictures__state='need_resize')
 
-        pps = list(ProductPicture.objects.filter(state='need_resize')[:50])
+        pps = list(ProductPicture.objects.filter(state='need_resize')[:1])
         # pps = list(ProductPicture.objects.filter(state='need_resize').values_list('picture_src', flat=True)[:50])
         print(f'you have {len(pps)} not downloaded image')
 
@@ -88,23 +86,3 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.initial_setup()
 
-
-# Multi thread python ,request downloaded ,Finished in 2.27 seconds
-
-from PIL import Image as Img
-# import StringIO
-
-# class Images(models.Model):
-#     image = models.ImageField()
-#
-#     def save(self, *args, **kwargs):
-#         if self.image:
-#             img = Img.open(StringIO.StringIO(self.image.read()))
-#             if img.mode != 'RGB':
-#                 img = img.convert('RGB')
-#             img.thumbnail((self.image.width/1.5,self.image.height/1.5), Img.ANTIALIAS)
-#             output = StringIO.StringIO()
-#             img.save(output, format='JPEG', quality=70)
-#             output.seek(0)
-#             self.image= InMemoryUploadedFile(output,'ImageField', "%s.jpg" %self.image.name.split('.')[0], 'image/jpeg', output.len, None)
-#         super(Images, self).save(*args, **kwargs)
