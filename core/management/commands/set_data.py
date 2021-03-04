@@ -24,9 +24,9 @@ class Command(BaseCommand):
 
         start = time.perf_counter()
 
-        vendor, created = Vendor.objects.get_or_create(name='okala')
+        vendor, created = Vendor.objects.get_or_create(name='digikala')
 
-        data_address = str(BASE_DIR) + '/data/okala-images.json'
+        data_address = str(BASE_DIR) + '/data/digikala-images.json'
         with open(data_address, 'r', encoding='utf-8') as json_file:
             my_data = json.load(json_file)
             for index, link in enumerate(my_data):

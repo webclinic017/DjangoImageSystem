@@ -45,7 +45,7 @@ class Command(BaseCommand):
         response = requests.get(obj.picture_src, stream=True)
 
         if response.status_code != requests.codes.ok:
-            pass
+            print(response)
 
         file_name = obj.picture_src.split('/')[-1]
 
@@ -84,7 +84,7 @@ class Command(BaseCommand):
 
         # Product.objects.filter(pictures__state='need_resize')
 
-        pps = list(ProductPicture.objects.filter(state='need_resize')[:7])
+        pps = list(ProductPicture.objects.filter(state='need_resize', product__vendor__name='digikala')[:50])
         # pps = list(ProductPicture.objects.filter(state='need_resize').values_list('picture_src', flat=True)[:50])
         print(f'you have {len(pps)} not downloaded image')
 
