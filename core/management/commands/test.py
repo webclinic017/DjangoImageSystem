@@ -63,6 +63,7 @@ class Command(BaseCommand):
         image_obj_large = files.File(lf)
         image_obj_medium = files.File(lf)
         image_obj_small.name = file_name + '_s'
+        image_obj_small.name = '{}_{}.{}'.format(file_name, 's', 'webp')
         image_obj_large.name = file_name + '_l'
         image_obj_medium.name = file_name + '_m'
 
