@@ -4,7 +4,7 @@
 ### Delete ImageField
 
 1. Signals
-    ```
+    ```python
         import os
         import uuid
         
