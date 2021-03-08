@@ -55,7 +55,7 @@
 2. Django Clean up
  - pip install django-cleanup
  
-    ```
+    ```python
        INSTALLED_APPS = (
            'django_cleanup', # should go after your apps
        )
