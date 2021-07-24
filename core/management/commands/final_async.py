@@ -147,7 +147,7 @@ class Command(BaseCommand):
 
         # Product.objects.filter(pictures__state='need_resize')
         pps = list(ProductPicture.objects.filter(state='need_resize')[:50])
-        IMAGES_PATH = '/home/amirbahador/Desktop/Pics/'
+        IMAGES_PATH = '/home/abb/Desktop/pics'
         self.download_images(pps, IMAGES_PATH)
 
 
