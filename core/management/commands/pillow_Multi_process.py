@@ -11,7 +11,9 @@ from io import StringIO
 import glob
 from pathlib import Path, PurePath
 """
-
+Finished in 7.4 seconds       Normal
+Finished in 2.05 seconds      ProcessPoolExecutor
+Finished in 2.11 seconds      ThreadPoolExecutor
 """
 
 
@@ -21,9 +23,11 @@ def resizer(img_path):
     new_image = Image.open(img_path)
     convert_image = new_image.convert('RGB')
     file_name = Path(img_path).stem
-    convert_image.save(str(PurePath(resize_path, file_name + "_s" + '.webp')), 'webp')
-    convert_image.save(str(PurePath(resize_path, file_name + "_m" + '.webp')), 'webp')
-    convert_image.save(str(PurePath(resize_path, file_name + "_l" + '.webp')), 'webp')
+    img = convert_image.resize((512, 512), Image.ANTIALIAS)
+    img.save(str(PurePath(resize_path, file_name + "_main" + '.webp')), 'webp')
+    new_image.thumbnail((216, 216))
+    new_image.save(str(PurePath(resize_path, file_name + "_thumbnail" + '.webp')), 'webp',  quality=85)
+    # convert_image.save(str(PurePath(resize_path, file_name + "_l" + '.webp')), 'webp')
 
     print('med is saved')
 
@@ -46,6 +50,9 @@ class Command(BaseCommand):
         # for i in image_list:
         #     resizer(i)
 
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
+        #     executor.map(resizer, image_list)
+
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             executor.map(resizer, image_list)
@@ -60,5 +67,5 @@ class Command(BaseCommand):
         self.initial_setup()
 
 
-# Multi thread python ,request downloaded ,Finished in 2.27 seconds
+# Finished in 4.18 seconds Without resize
 
